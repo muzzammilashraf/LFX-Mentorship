@@ -4,7 +4,7 @@ from random import randint
 
 from cocotb import test, start_soon
 from cocotb.clock import Clock
-from cocotb.triggers import Timer
+from cocotb.triggers import Timer, RisingEdge
 from bitstring import Bits
 
 ROOT = dirname(
@@ -13,8 +13,11 @@ ROOT = dirname(
 
 async def clear_stack(length, stack, dut, i, f):
     dut.reset.value = 1
+    await RisingEdge(dut.clock)
     dut.io_in.value = 0
-    await Timer(1, units = 'ns')
+    await RisingEdge(dut.clock)
+    await RisingEdge(dut.clock)
+    await RisingEdge(dut.clock)
     stack.clear()
     assert dut.io_out.value == 0
     assert dut.io_underflow.value == 0
@@ -37,7 +40,7 @@ async def push_to_stack(data_width, length, stack, dut, i, f):
     inst = Bits(b32 = f'{push_val:025b}0100111')
     dut.io_in.value = inst.u
     dut.reset.value = 0
-    await Timer(1, units = 'ns')
+    await RisingEdge(dut.clock)
     assert dut.io_out.value == 0
     assert dut.io_underflow.value == 0
     assert dut.io_popped.value == 0
@@ -63,7 +66,7 @@ async def pop_from_stack(data_width, length, stack, dut, i, f):
     inst = Bits(b32 = f'{"0" * 25}1000011')
     dut.io_in.value = inst.u
     dut.reset.value = 0
-    await Timer(1, units = 'ns')
+    await RisingEdge(dut.clock)
     assert dut.io_overflow.value == 0
     assert dut.io_peeked.value == 0
     if stack:
@@ -90,7 +93,7 @@ async def peek_at_stack(data_width, length, stack, dut, i, f):
     inst = Bits(b32 = f'{"0" * 25}1{"0" * 6}')
     dut.io_in.value = inst.u
     dut.reset.value = 0
-    await Timer(1, units = 'ns')
+    await RisingEdge(dut.clock)
     assert dut.io_overflow.value == 0
     assert dut.io_popped.value == 0
     if stack:
